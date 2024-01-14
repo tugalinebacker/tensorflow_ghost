@@ -30,15 +30,6 @@ gpus = tf.config.experimental.list_physical_devices('GPU')
 for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
 
-# PROVIDE PATH TO IMAGE DIRECTORY
-IMAGE_PATHS = args.image
-
-
-# PROVIDE PATH TO MODEL DIRECTORY
-PATH_TO_MODEL_DIR = args.model
-
-# PROVIDE PATH TO LABEL MAP
-PATH_TO_LABELS = args.labels
 
 # PROVIDE THE MINIMUM CONFIDENCE THRESHOLD
 MIN_CONF_THRESH = float(args.threshold)
@@ -49,7 +40,10 @@ import time
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as viz_utils
 
-PATH_TO_SAVED_MODEL = PATH_TO_MODEL_DIR + "/saved_model"
+dirname = os.path.dirname(__file__)
+PATH_TO_SAVED_MODEL = os.path.join(dirname, 'exported-models/ghost_mkI_mobilenet50_MX250_v2/saved_model')
+PATH_TO_LABELS = os.path.join(dirname, 'annotations/label_map.pbtxt')
+IMAGE_PATHS = os.path.join(dirname, 'images/test/BALTIC6.jpg')
 
 print('Loading model...', end='')
 start_time = time.time()
@@ -129,7 +123,40 @@ viz_utils.visualize_boxes_and_labels_on_image_array(
       min_score_thresh=MIN_CONF_THRESH,
       agnostic_mode=False)
 
-print('Done')
+print("\n--------------------")
+print("Image size\n")
+bounding_boxes = detections['detection_boxes']
+image_height, image_width, _ = image_with_detections.shape
+print("\nimage_height = " + str(image_height))
+print("\nimage_width = " + str(image_width))
+bounding_boxes_pixel = bounding_boxes * np.array([image_height, image_width, image_height, image_width])
+
+print("\n--------------------")
+print("Bounding box coordinates\n")
+print(bounding_boxes_pixel)
+
+print("\n--------------------")
+print("Confidence_scores\n")
+confidence_scores = detections['detection_scores']
+print(confidence_scores)
+
+print("\n--------------------")
+print("Highest confidence box index and score\n")
+max_confidence_index = np.argmax(confidence_scores)
+highest_confidence_bbox = confidence_scores[max_confidence_index]
+print(str(max_confidence_index) + " and " + str(round(highest_confidence_bbox,2)))
+
+print("\n--------------------")
+print("Highest confidence box coordinates\n")
+bbox_with_max_confidence = bounding_boxes[max_confidence_index]
+print(bbox_with_max_confidence)
+print("\n--------------------")
+print("Highest confidence box coordinates in pixels\n")
+bbox_with_max_confidence_pixel = bounding_boxes_pixel[max_confidence_index]
+print(bbox_with_max_confidence_pixel)
+
+
+print('\nDone. Pó crl, Lúce!')
 # DISPLAYS OUTPUT IMAGE
 cv2.imshow('Object Detector', image_with_detections)
 # CLOSES WINDOW ONCE KEY IS PRESSED
