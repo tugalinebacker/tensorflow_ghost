@@ -30,6 +30,15 @@ gpus = tf.config.experimental.list_physical_devices('GPU')
 for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
 
+# PROVIDE PATH TO IMAGE DIRECTORY
+# IMAGE_PATHS = args.image
+
+
+# PROVIDE PATH TO MODEL DIRECTORY
+# PATH_TO_MODEL_DIR = args.model
+
+# PROVIDE PATH TO LABEL MAP
+# PATH_TO_LABELS = args.labels
 
 # PROVIDE THE MINIMUM CONFIDENCE THRESHOLD
 MIN_CONF_THRESH = float(args.threshold)
@@ -40,10 +49,12 @@ import time
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as viz_utils
 
+# PATH_TO_SAVED_MODEL = PATH_TO_MODEL_DIR + 'saved_model'
 dirname = os.path.dirname(__file__)
 PATH_TO_SAVED_MODEL = os.path.join(dirname, 'exported-models/ghost_mkI_mobilenet50_MX250_v2/saved_model')
 PATH_TO_LABELS = os.path.join(dirname, 'annotations/label_map.pbtxt')
 IMAGE_PATHS = os.path.join(dirname, 'images/test/BALTIC6.jpg')
+# MIN_CONF_THRESH = 0.50
 
 print('Loading model...', end='')
 start_time = time.time()
@@ -132,6 +143,11 @@ print("\nimage_width = " + str(image_width))
 bounding_boxes_pixel = bounding_boxes * np.array([image_height, image_width, image_height, image_width])
 
 print("\n--------------------")
+print("Bounding box classes\n")
+classes = detections['detection_classes']
+print(category_index)
+
+print("\n--------------------")
 print("Bounding box coordinates\n")
 print(bounding_boxes_pixel)
 
@@ -143,19 +159,30 @@ print(confidence_scores)
 print("\n--------------------")
 print("Highest confidence box index and score\n")
 max_confidence_index = np.argmax(confidence_scores)
-highest_confidence_bbox = confidence_scores[max_confidence_index]
-print(str(max_confidence_index) + " and " + str(round(highest_confidence_bbox,2)))
+highest_confidence_bbox_score = confidence_scores[max_confidence_index]
+print(str(max_confidence_index) + " and " + str(round(highest_confidence_bbox_score,2)))
 
 print("\n--------------------")
 print("Highest confidence box coordinates\n")
-bbox_with_max_confidence = bounding_boxes[max_confidence_index]
-print(bbox_with_max_confidence)
+highest_confidence_bbox_coordinates = bounding_boxes[max_confidence_index]
+print(highest_confidence_bbox_coordinates)
 print("\n--------------------")
 print("Highest confidence box coordinates in pixels\n")
-bbox_with_max_confidence_pixel = bounding_boxes_pixel[max_confidence_index]
-print(bbox_with_max_confidence_pixel)
+highest_confidence_bbox_coordinates_pixel = bounding_boxes_pixel[max_confidence_index]
+print(highest_confidence_bbox_coordinates_pixel)
+#ymin, xmin, ymax, xmax
+print("\n--------------------")
+print("Highest confidence box class\n")
+highest_confidence_bbox_class = classes[max_confidence_index]
+class_name = category_index[highest_confidence_bbox_class]['name']
+print(class_name)
 
-
+print("\n--------------------")
+print("Center points\n")
+cf = [image_width/2, image_height/2]
+cbb = [highest_confidence_bbox_coordinates_pixel[1]+highest_confidence_bbox_coordinates_pixel[3]/2, highest_confidence_bbox_coordinates_pixel[0]+highest_confidence_bbox_coordinates_pixel[2]/2]
+print("Center of frame -> " + str(cf))
+print("Center of bouding box -> " + str(cbb))
 print('\nDone. Pó crl, Lúce!')
 # DISPLAYS OUTPUT IMAGE
 cv2.imshow('Object Detector', image_with_detections)
@@ -163,5 +190,3 @@ cv2.imshow('Object Detector', image_with_detections)
 cv2.waitKey(0)
 # CLEANUP
 cv2.destroyAllWindows()
-
-
